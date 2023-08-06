@@ -24,11 +24,11 @@ jobs:
         with:
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: wovnep/tauri-update-server:latest,wovnep/tauri-update-server:${{ github.ref_name }}   
+          tags: hecki/tauri-update-server:latest,hecki/tauri-update-server:${{ github.ref_name }}   
       - uses: actions/checkout@v3
       - name: Docker Hub README update
         uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: wovnep/tauri-update-server
+          repository: hecki/tauri-update-server
