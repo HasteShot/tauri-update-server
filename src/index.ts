@@ -14,27 +14,25 @@ interface Parameters {
 }
 
 app.get('/update', async (req: Request<{}, {}, {}, Parameters>, res: Response) => {
-    if (req.query.current_version && req.query.target && req.query.arch) {
-        const latest = await github();
-        if (latest.message === 'Not Found') {
-            res.status(204).send();
+    if (!req.query.current_version || !req.query.target || !req.query.arch) {
+        return res.status(400).send({
+            message: 'Invalid request: Missing required query parameters',
+        });
+    }
+    const latest = await github();
+    if (latest.message === 'Not Found') {
+        return res.status(204).send();
+    } 
+    if (compare(latest.tag_name, req.query.current_version, '>')) {
+        const version = process.env.TAG_STRUCTURE ? latest.tag_name.split(process.env.TAG_STRUCTURE)[1] : latest.tag_name;
+        const release = getReleases(latest.assets, req.query.target, req.query.arch);
+        if (Object.keys(release).length !== 0) {
+            res.status(200).send(await template(release, version, req.query.current_version));
         } else {
-            if (compare(latest.tag_name, req.query.current_version, '>')) {
-                const version = process.env.TAG_STRUCTURE ? latest.tag_name.split(process.env.TAG_STRUCTURE)[1] : latest.tag_name;
-                const release = getReleases(latest.assets, req.query.target, req.query.arch);
-                if (Object.keys(release).length !== 0) {
-                    res.status(200).send(await template(release, version, req.query.current_version));
-                } else {
-                    res.status(204).send();
-                }
-            } else {
-                res.status(204).send();
-            }
+            res.status(204).send();
         }
     } else {
-        res.status(400).send({
-            message: 'Invalid request',
-        });
+        res.status(204).send();
     }
 });
 app.listen(8080, '0.0.0.0', () => console.log(`Server listening on http://0.0.0.0:8080/`));
